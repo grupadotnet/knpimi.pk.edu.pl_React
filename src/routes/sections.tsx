@@ -93,15 +93,12 @@ export function Sections() {
 
           {/* 3-Column Grid */}
           <div className="grid gap-6 md:grid-cols-3">
-            {sections.map((section, index) => {
+            {sections.map((section) => {
               const Icon = section.icon;
 
               return (
                 <Link to={section.path} key={section.path}>
-                  <Card
-                    key={index}
-                    className="group border-none bg-muted/50 shadow-sm transition-shadow transition-transform duration-300 hover:-translate-y-1 hover:shadow-md dark:hover:bg-muted/70"
-                  >
+                  <Card className="group border-none bg-muted/50 shadow-sm transition-shadow transition-transform duration-300 hover:-translate-y-1 hover:shadow-md dark:hover:bg-muted/70">
                     <CardHeader>
                       <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                         {/* Remix Icons accept standard Tailwind sizing classes perfectly */}
