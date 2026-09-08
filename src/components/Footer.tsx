@@ -133,13 +133,13 @@ export default function Footer() {
     <footer className={' w-11/12 m-auto text-center *:my-20 text-white'}>
       <section
         className={
-          'grid md:grid-cols-3 md:grid-rows-2 grid-cols-1 grid-rows-4  justify-items-center content-center'
+          'grid md:grid-cols-3 md:grid-rows-2 grid-cols-1 grid-rows-4  justify-items-center content-center gap-5'
         }
       >
         <div className="md:col-span-3 relative h-full md:w-1/2 w-full">
           <div
             ref={mapContainerRef}
-            className="absolute size-full rounded-xl"
+            className="absolute size-full inset-0 rounded-xl"
           />
         </div>
         <Card
