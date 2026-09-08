@@ -264,7 +264,7 @@ export default function Header() {
                               className={`${theme === (possibleTheme as Theme) ? 'scrolled' : ''}`}
                               onClick={() => setTheme(possibleTheme as Theme)}
                             >
-                              {possibleTheme}
+                              {t(`Header.${possibleTheme}`)}
                             </span>
                           }
                         ></NavigationMenuLink>

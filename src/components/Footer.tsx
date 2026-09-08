@@ -18,8 +18,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card.tsx';
 import { useScrollAndWidth } from '@/lib/useScrollAndWidth.tsx';
 import { useTranslation } from 'react-i18next';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTheme } from '@/components/theme-provider.tsx';
+import { Map, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+
+setWorkerUrl(workerUrl);
 
 interface Social {
   href: string;
@@ -50,6 +55,15 @@ const socials: Social[] = [
   },
 ];
 
+const lightStyle =
+  'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+const darkStyle =
+  'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+const coords = [50.076039972227136, 19.99445118155016].toReversed() as [
+  number,
+  number,
+];
+
 // Moved to module scope so it's created once and reused across renders
 const footerLogos: Record<string, string[]> = {
   light: [LogoPK, LogoWM, LogoBotland],
@@ -57,32 +71,76 @@ const footerLogos: Record<string, string[]> = {
 };
 
 export default function Footer() {
+  const { actualTheme } = useTheme();
+
   const { t } = useTranslation();
   const { isMobile } = useScrollAndWidth(useRef(null), '', 1024);
+
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<Map | null>(null);
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    // Check if container has valid size (width > 0 && height > 0)
+    const rect = mapContainerRef.current.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      console.warn(
+        'Map container has no dimensions. WebGL context might be lost.'
+      );
+      return;
+    }
+
+    const map = new Map({
+      container: mapContainerRef.current,
+      style: actualTheme === 'dark' ? darkStyle : lightStyle,
+      center: coords,
+      zoom: 12,
+    });
+    mapInstanceRef.current = map;
+
+    map.addControl(new NavigationControl(), 'top-right');
+    new Marker()
+      .setLngLat(coords) // Match your center coordinates
+      .addTo(map);
+
+    return () => {};
+  }, []);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const newStyle = actualTheme === 'dark' ? darkStyle : lightStyle;
+    const updateStyle = () => {
+      map.setStyle(newStyle);
+    };
+
+    if (map.isStyleLoaded()) {
+      updateStyle();
+    } else {
+      map.once('load', updateStyle);
+    }
+  }, [actualTheme]);
 
   const footerURLs: string[] = [
     'https://www.pk.edu.pl',
     'https://mech.pk.edu.pl/',
+    'https://botland.com.pl/',
   ];
-
-  const { actualTheme } = useTheme();
 
   return (
     <footer className={' w-11/12 m-auto text-center *:my-20 text-white'}>
       <section
         className={
-          'grid md:grid-cols-3 md:grid-rows-2 grid-cols-1 grid-rows-4  justify-items-center content-center'
+          'grid md:grid-cols-3 md:grid-rows-2 grid-cols-1 grid-rows-4  justify-items-center content-center gap-5'
         }
       >
-        <div className={'md:col-span-3'}>
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d439.7595064495235!2d19.99434218133859!3d50.07600006690038!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47165ad2e4488e25%3A0xa4ac37aaae919a61!2sAula%20G18%20Wydzia%C5%82%20Mechaniczny!5e0!3m2!1spl!2spl!4v1787851631322!5m2!1spl!2spl"
-            allowFullScreen={false}
-            title="Map showing Aula G18 Wydzia Mechaniczny at the University of Kraków"
-            loading="lazy"
-            referrerPolicy="strict-origin-when-cross-origin"
-            sandbox="allow-scripts allow-same-origin"
-          ></iframe>
+        <div className="md:col-span-3 relative h-full md:w-1/2 w-full">
+          <div
+            ref={mapContainerRef}
+            className="absolute size-full inset-0 rounded-xl"
+          />
         </div>
         <Card
           className={`flex flex-col items-center gap-8 py-8 sm:items-start bg-background ${!isMobile ? 'col-span-2' : ''}`}
